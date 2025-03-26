@@ -24,6 +24,7 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast, Toaster } from "sonner";
+import { LuLoaderCircle } from "react-icons/lu";
 
 type TracksResponse = {
   items: TrackObject[];
@@ -235,8 +236,9 @@ export default function Home() {
   } else if (tracks.length < 1 || topTracks.length < 1) {
     return (
       <div className="h-screen p-4 flex items-center">
-        <div className="mx-auto bg-gray-200 rounded-md p-4 flex items-center gap-4">
-          <h1 className="animate-spin">⁐</h1>
+        <div className="mx-auto bg-gray-200 rounded-md p-4 flex items-center gap-2">
+          <LuLoaderCircle className="animate-spin text-2xl" />
+
           <h1>Getting liked songs...</h1>
         </div>
       </div>
@@ -351,7 +353,12 @@ export default function Home() {
                   Play Again
                 </Button>
               ) : (
-                <></>
+                <>
+                  <h1>
+                    Waiting for {roomData.players[roomData.hostId].username} to
+                    play again...
+                  </h1>
+                </>
               )}
             </CardFooter>
           </Card>
@@ -391,59 +398,61 @@ export default function Home() {
   }
 
   return (
-    <div className="p-4">
-      <div className="w-full rounded-full overflow-hidden bg-gray-200 h-4 mb-4">
-        <div className="h-full bg-black progress-bar"></div>
-      </div>
+    <div>
+      <div className="min-h-screen flex flex-col justify-between">
+        <div className="flex flex-col gap-4 p-4">
+          <div className="w-full rounded-full overflow-hidden bg-gray-200 h-4">
+            <div className="h-full bg-black progress-bar"></div>
+          </div>
 
-      <div className="mx-auto max-w-xl flex flex-col gap-4 items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-center">
-            {roomData.currentTrackData.track.album.name}
-          </h1>
+          <div className="mx-auto w-md max-w-full flex flex-col gap-4 items-center">
+            <div className="max-w-full flex flex-col items-center">
+              <div className="w-[200px] md:w-[300px] lg:w-[400px] aspect-square max-w-full relative border-2">
+                <Image
+                  src={roomData.currentTrackData.track.album.images[0].url}
+                  alt="Album Cover"
+                  fill
+                  priority
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
+              </div>
 
-          <p className="text-gray-500 text-center">
-            {roomData.currentTrackData.track.artists[0].name}
-          </p>
+              <div>
+                <h1 className="text-2xl font-bold text-center">
+                  {roomData.currentTrackData.track.name}
+                </h1>
+
+                <p className="text-gray-500 text-center">
+                  {roomData.currentTrackData.track.artists[0].name}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 w-full">
+              {Object.values(roomData.players).map(({ playerId, username }) => (
+                <PlayerSelectionButton
+                  playerId={playerId}
+                  username={username}
+                  canSelect={!selectedPlayer}
+                  isSelected={selectedPlayer === playerId}
+                  selectPlayer={handleSelectPlayer}
+                  showCorrectAnswer={showCorrectAnswer}
+                  correctPlayerId={
+                    roomData.currentTrackData?.playerId || "Undefined"
+                  }
+                  key={playerId}
+                />
+              ))}
+            </div>
+          </div>
         </div>
 
-        <Image
-          src={roomData.currentTrackData.track.album.images[0].url}
-          alt="Album Cover"
-          width={400}
-          height={400}
-          priority
-          unoptimized
-          className="border-2"
-        />
-
-        <h1 className="text-2xl text-center">
-          {roomData.currentTrackData.track.name}
-        </h1>
-
-        <div className="grid grid-cols-2 w-full gap-4">
-          {Object.values(roomData.players).map(({ playerId, username }) => (
-            <PlayerSelectionButton
-              playerId={playerId}
-              username={username}
-              canSelect={!selectedPlayer}
-              isSelected={selectedPlayer === playerId}
-              selectPlayer={handleSelectPlayer}
-              showCorrectAnswer={showCorrectAnswer}
-              correctPlayerId={
-                roomData.currentTrackData?.playerId || "Undefined"
-              }
-              key={playerId}
-            />
-          ))}
+        <div className="sticky bottom-0 left-0 right-0">
+          <SongPlayer
+            accessToken={accessToken}
+            uris={roomData.currentTrackData.track.uri}
+          />
         </div>
-      </div>
-
-      <div className="left-0 right-0 bottom-0 fixed">
-        <SongPlayer
-          accessToken={accessToken}
-          uris={roomData.currentTrackData.track.uri}
-        />
       </div>
 
       <Toaster position="top-center" />

@@ -1,4 +1,3 @@
-import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import Image from "next/image";
 import { Player } from "@/server";
@@ -25,7 +24,7 @@ export default function TopSongsCard({ selectedLobbyPlayer }: Props) {
               alt="Album Cover"
               width={32}
               height={32}
-              unoptimized
+              priority
             />
 
             <h1>{track.name}</h1>
