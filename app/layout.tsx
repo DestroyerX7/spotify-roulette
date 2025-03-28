@@ -19,9 +19,6 @@ export const metadata: Metadata = {
   title: "Spotify Roulette",
   description:
     "Multiplayer game where players guess who's Spotify song is playing",
-  icons: {
-    icon: "/favicon.ico",
-  },
 };
 
 export default function RootLayout({

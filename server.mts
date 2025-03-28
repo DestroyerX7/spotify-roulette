@@ -4,9 +4,9 @@ import { Server } from "socket.io";
 import dotenv from "dotenv";
 import { Track } from "./app/page";
 
-export type RoomData = {
+export type LobbyData = {
   players: { [playerId: string]: Player };
-  roomCode: string;
+  joinCode: string;
   hostId: string;
   roundStartTime: number | null;
   currentRound: number;
@@ -39,9 +39,12 @@ const port = (process.env.PORT || 3000) as number;
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
 
-const rooms: { [roomCode: string]: RoomData } = {};
+const lobbies: { [joinCode: string]: LobbyData } = {};
 
-function generateRandomString(length = 6) {
+const showScoresTime = 2500;
+const showCorrectAnswerTime = 2500;
+
+function generateJoinCode(length = 6) {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
   let result = "";
   for (let i = 0; i < length; i++) {
@@ -50,30 +53,84 @@ function generateRandomString(length = 6) {
   return result;
 }
 
-function chooseNextPlayer(roomCode: string, io: Server) {
-  if (rooms[roomCode].currentRound >= rooms[roomCode].numRounds) {
+function chooseNextPlayer(joinCode: string, io: Server) {
+  if (lobbies[joinCode].currentRound >= lobbies[joinCode].numRounds) {
     return;
   }
 
-  const playersList = Object.values(rooms[roomCode].players);
+  const playersList = Object.values(lobbies[joinCode].players);
   const playerIndex = Math.floor(Math.random() * playersList.length);
 
   io.to(playersList[playerIndex].playerId).emit("pickNextSong");
 }
 
-function playAgain(roomCode: string, io: Server) {
-  rooms[roomCode].currentRound = 0;
-  rooms[roomCode].currentTrackData = null;
-  rooms[roomCode].roundStartTime = null;
+function playAgain(joinCode: string, io: Server) {
+  lobbies[joinCode].currentRound = 0;
+  lobbies[joinCode].currentTrackData = null;
+  lobbies[joinCode].roundStartTime = null;
 
-  for (const player of Object.values(rooms[roomCode].players)) {
+  for (const player of Object.values(lobbies[joinCode].players)) {
     player.answeredTime = null;
     player.score = 0;
   }
 
-  io.to(roomCode).emit("updateRoomData", rooms[roomCode]);
+  io.to(joinCode).emit("updateLobbyData", lobbies[joinCode]);
 
-  chooseNextPlayer(roomCode, io);
+  chooseNextPlayer(joinCode, io);
+}
+
+function startNextRound(
+  joinCode: string,
+  track: Track,
+  playerId: string,
+  io: Server
+) {
+  if (lobbies[joinCode].currentRound >= lobbies[joinCode].numRounds) {
+    return;
+  }
+
+  for (const player of Object.values(lobbies[joinCode].players)) {
+    player.answeredTime = null;
+  }
+
+  lobbies[joinCode].currentRound++;
+  lobbies[joinCode].roundStartTime = Date.now();
+  lobbies[joinCode].currentTrackData = {
+    track: track,
+    playerId: playerId,
+  };
+
+  io.to(joinCode).emit("startNextRound", lobbies[joinCode]);
+
+  if (lobbies[joinCode].currentRound >= lobbies[joinCode].numRounds) {
+    return;
+  }
+
+  setTimeout(() => {
+    if (!(joinCode in lobbies)) {
+      return;
+    }
+
+    chooseNextPlayer(joinCode, io);
+  }, lobbies[joinCode].roundLength + lobbies[joinCode].showCorrectAnswerTime + lobbies[joinCode].showScoresTime);
+}
+
+// If the host leaves the lobby then no one can start the game
+function leaveLobby(
+  joinCode: string,
+  onLeaveLobby: () => void,
+  playerId: string,
+  io: Server
+) {
+  delete lobbies[joinCode].players[playerId];
+
+  if (Object.entries(lobbies[joinCode].players).length === 0) {
+    delete lobbies[joinCode];
+  } else {
+    io.to(joinCode).emit("updateLobbyData", lobbies[joinCode]);
+  }
+
+  onLeaveLobby();
 }
 
 app.prepare().then(() => {
@@ -82,9 +139,9 @@ app.prepare().then(() => {
   const io = new Server(httpServer);
 
   io.on("connection", (socket) => {
-    socket.on("createRoom", (username, topTracks) => {
-      const roomCode = generateRandomString();
-      socket.join(roomCode);
+    socket.on("createLobby", (username, numRounds, roundLength, topTracks) => {
+      const joinCode = generateJoinCode();
+      socket.join(joinCode);
 
       const player = {
         playerId: socket.id,
@@ -94,29 +151,29 @@ app.prepare().then(() => {
         topTracks: topTracks,
       };
 
-      rooms[roomCode] = {
+      lobbies[joinCode] = {
         players: { [socket.id]: player },
-        roomCode: roomCode,
+        joinCode: joinCode,
         hostId: socket.id,
         currentRound: 0,
         roundStartTime: null,
         currentTrackData: null,
-        numRounds: 10,
-        roundLength: 10000,
-        showScoresTime: 2500,
-        showCorrectAnswerTime: 2500,
+        numRounds: numRounds,
+        roundLength: roundLength,
+        showScoresTime: showScoresTime,
+        showCorrectAnswerTime: showCorrectAnswerTime,
       };
 
-      io.to(roomCode).emit("updateRoomData", rooms[roomCode]);
+      io.to(joinCode).emit("updateLobbyData", lobbies[joinCode]);
     });
 
-    socket.on("joinRoom", (roomCode, username, topTracks) => {
-      if (!(roomCode in rooms)) {
+    socket.on("joinLobby", (joinCode, username, topTracks) => {
+      if (!(joinCode in lobbies)) {
         socket.emit("error", "Join code not found");
         return;
       }
 
-      socket.join(roomCode);
+      socket.join(joinCode);
 
       const player = {
         playerId: socket.id,
@@ -126,71 +183,55 @@ app.prepare().then(() => {
         topTracks: topTracks,
       };
 
-      rooms[roomCode].players[socket.id] = player;
-      io.to(roomCode).emit("updateRoomData", rooms[roomCode]);
+      lobbies[joinCode].players[socket.id] = player;
+      io.to(joinCode).emit("updateLobbyData", lobbies[joinCode]);
     });
 
-    socket.on("nextRound", (track, roomCode) => {
-      if (rooms[roomCode].currentRound >= rooms[roomCode].numRounds) {
-        return;
-      }
-
-      for (const player of Object.values(rooms[roomCode].players)) {
-        player.answeredTime = null;
-      }
-
-      rooms[roomCode].currentRound++;
-      rooms[roomCode].roundStartTime = Date.now();
-      rooms[roomCode].currentTrackData = {
-        track: track,
-        playerId: socket.id,
-      };
-
-      io.to(roomCode).emit("nextRound", rooms[roomCode]);
+    socket.on("startNextRound", (track, joinCode) => {
+      startNextRound(joinCode, track, socket.id, io);
     });
 
-    socket.on("chooseNextPlayer", (roomCode) => {
-      chooseNextPlayer(roomCode, io);
+    socket.on("chooseNextPlayer", (joinCode) => {
+      chooseNextPlayer(joinCode, io);
     });
 
-    socket.on("selectPlayer", (selectedPlayerId, roomCode) => {
+    socket.on("selectPlayer", (selectedPlayerId, joinCode) => {
       if (
-        !rooms[roomCode].roundStartTime ||
-        !rooms[roomCode].currentTrackData
+        !lobbies[joinCode].roundStartTime ||
+        !lobbies[joinCode].currentTrackData
       ) {
         return;
       }
 
-      const answeredTime = Date.now() - rooms[roomCode].roundStartTime;
+      const answeredTime = Date.now() - lobbies[joinCode].roundStartTime;
 
-      if (selectedPlayerId === rooms[roomCode].currentTrackData.playerId) {
-        const points = Math.max(0, rooms[roomCode].roundLength - answeredTime);
-        rooms[roomCode].players[socket.id].score += points;
+      if (selectedPlayerId === lobbies[joinCode].currentTrackData.playerId) {
+        const points = Math.max(
+          0,
+          lobbies[joinCode].roundLength - answeredTime
+        );
+        lobbies[joinCode].players[socket.id].score += points;
       }
 
-      rooms[roomCode].players[socket.id].answeredTime = answeredTime;
+      lobbies[joinCode].players[socket.id].answeredTime = answeredTime;
 
-      io.to(roomCode).emit("updateRoomData", rooms[roomCode]);
+      io.to(joinCode).emit("updateLobbyData", lobbies[joinCode]);
     });
 
-    socket.on("playAgain", (roomCode) => {
-      playAgain(roomCode, io);
+    socket.on("playAgain", (joinCode) => {
+      playAgain(joinCode, io);
+    });
+
+    socket.on("leaveLobby", (joinCode, onLeaveLobby) => {
+      leaveLobby(joinCode, onLeaveLobby, socket.id, io);
     });
 
     socket.on("disconnect", () => {
-      for (const [roomCode, room] of Object.entries(rooms)) {
-        const keys = Object.keys(room.players);
+      for (const lobbyData of Object.values(lobbies)) {
+        const playersList = Object.keys(lobbyData.players);
 
-        if (!keys.includes(socket.id)) {
-          continue;
-        }
-
-        delete room.players[socket.id];
-
-        if (Object.entries(room.players).length === 0) {
-          delete rooms[roomCode];
-        } else {
-          io.to(roomCode).emit("updateRoomData", room);
+        if (playersList.includes(socket.id)) {
+          leaveLobby(lobbyData.joinCode, () => {}, socket.id, io);
         }
       }
     });

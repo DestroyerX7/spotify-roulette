@@ -50,7 +50,7 @@ export default function JoinLobbyForm({ topTracks }: Props) {
   });
 
   const joinLobby = (data: z.infer<typeof joinFormSchema>) => {
-    socket.emit("joinRoom", data.joinCode, data.username, topTracks);
+    socket.emit("joinLobby", data.joinCode, data.username, topTracks);
   };
 
   return (

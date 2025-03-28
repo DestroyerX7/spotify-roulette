@@ -24,13 +24,15 @@ export default function LoginCard() {
     "Based off Photo Roulette.",
     "Do you play chess? Just wondering...",
     "How much do u bench?",
+    "No affiliation with Spotify btw.",
+    "Am I allowed to use Spotify's name and logo?",
   ];
 
   return (
     <Card className="max-w-md">
       <CardHeader className="justify-center">
         <Image
-          src="/favicon.ico"
+          src="/SpotifyLogo.png"
           alt="Spotify Logo"
           width={200}
           height={200}

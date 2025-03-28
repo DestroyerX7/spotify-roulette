@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { TabsList, Tabs, TabsContent, TabsTrigger } from "@/components/ui/tabs";
 import useAuth from "@/lib/useAuth";
-import { Player, RoomData } from "@/server";
+import { Player, LobbyData } from "@/server";
 import { socket } from "@/socket";
 import axios from "axios";
 import Image from "next/image";
@@ -25,6 +25,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast, Toaster } from "sonner";
 import { LuLoaderCircle } from "react-icons/lu";
+import Header from "@/components/Header";
 
 type TracksResponse = {
   items: TrackObject[];
@@ -67,8 +68,8 @@ export default function Home() {
     null
   );
 
-  const [roomData, setRoomData] = useState<RoomData | null>(null);
-  const roomDataRef = useRef<RoomData | null>(null);
+  const [lobbyData, setLobbyData] = useState<LobbyData | null>(null);
+  const lobbyDataRef = useRef<LobbyData | null>(null);
 
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
@@ -133,12 +134,12 @@ export default function Home() {
       setTopTracks(response.data.items);
     };
 
-    const handleNextRound = (roomData: RoomData) => {
-      if (!roomDataRef.current) {
+    const handleStartNextRound = (lobbyData: LobbyData) => {
+      if (!lobbyDataRef.current) {
         return;
       }
 
-      handleUpdateRoomData(roomData);
+      handleUpdateLobbyData(lobbyData);
 
       setShowScores(false);
       setSelectedPlayer(null);
@@ -146,41 +147,26 @@ export default function Home() {
 
       setTimeout(() => {
         setShowCorrectAnswer(true);
-      }, roomDataRef.current.roundLength);
+      }, lobbyDataRef.current.roundLength);
 
       setTimeout(() => {
         setShowScores(true);
-      }, roomDataRef.current.roundLength + roomDataRef.current.showCorrectAnswerTime);
+      }, lobbyDataRef.current.roundLength + lobbyDataRef.current.showCorrectAnswerTime);
     };
 
-    const handleUpdateRoomData = (roomData: RoomData) => {
-      setRoomData(roomData);
-      roomDataRef.current = roomData;
+    const handleUpdateLobbyData = (lobbyData: LobbyData) => {
+      setLobbyData(lobbyData);
+      lobbyDataRef.current = lobbyData;
     };
 
     const handlePickNextSong = () => {
-      if (!roomDataRef.current) {
+      if (!lobbyDataRef.current) {
         return;
       }
 
       const randIndex = Math.floor(Math.random() * tracksRef.current.length);
       const track = tracksRef.current[randIndex];
-      socket.emit("nextRound", track, roomDataRef.current.roomCode);
-
-      if (
-        roomDataRef.current.currentRound >=
-        roomDataRef.current.numRounds - 1
-      ) {
-        return;
-      }
-
-      setTimeout(() => {
-        if (!roomDataRef.current) {
-          return;
-        }
-
-        socket.emit("chooseNextPlayer", roomDataRef.current.roomCode);
-      }, roomDataRef.current.roundLength + roomDataRef.current.showCorrectAnswerTime + roomDataRef.current.showScoresTime);
+      socket.emit("startNextRound", track, lobbyDataRef.current.joinCode);
     };
 
     const handleSocketError = (message: string) => {
@@ -190,26 +176,26 @@ export default function Home() {
     getUserTracks();
     getTopTracks();
 
-    socket.on("updateRoomData", handleUpdateRoomData);
+    socket.on("updateLobbyData", handleUpdateLobbyData);
     socket.on("pickNextSong", handlePickNextSong);
-    socket.on("nextRound", handleNextRound);
+    socket.on("startNextRound", handleStartNextRound);
     socket.on("error", handleSocketError);
 
     return () => {
-      socket.off("updateRoomData", handleUpdateRoomData);
+      socket.off("updateLobbyData", handleUpdateLobbyData);
       socket.off("pickNextSong", handlePickNextSong);
-      socket.off("nextRound", handleNextRound);
+      socket.off("startNextRound", handleStartNextRound);
       socket.off("error", handleSocketError);
     };
   }, [accessToken]);
 
   const handleSelectPlayer = (playerId: string) => {
-    if (!roomDataRef.current) {
+    if (!lobbyDataRef.current) {
       return;
     }
 
     setSelectedPlayer(playerId);
-    socket.emit("selectPlayer", playerId, roomDataRef.current.roomCode);
+    socket.emit("selectPlayer", playerId, lobbyDataRef.current.joinCode);
   };
 
   const selectLobbyPlayer = (player: Player) => {
@@ -223,19 +209,31 @@ export default function Home() {
     setSelectedLobbyPlayer(player);
   };
 
+  const leaveLobby = () => {
+    if (!lobbyData) {
+      return;
+    }
+
+    socket.emit("leaveLobby", lobbyData.joinCode, () => setLobbyData(null));
+  };
+
   if (!accessToken) {
     return (
-      <div className="h-screen flex items-center p-4">
-        <div className="mx-auto">
-          <LoginCard />
-        </div>
+      <>
+        <Header />
 
-        <Toaster position="top-center" />
-      </div>
+        <div className="min-h-screen flex items-center p-4">
+          <div className="mx-auto">
+            <LoginCard />
+          </div>
+
+          <Toaster position="top-center" />
+        </div>
+      </>
     );
   } else if (tracks.length < 1 || topTracks.length < 1) {
     return (
-      <div className="h-screen p-4 flex items-center">
+      <div className="min-h-screen p-4 flex items-center">
         <div className="mx-auto bg-gray-200 rounded-md p-4 flex items-center gap-2">
           <LuLoaderCircle className="animate-spin text-2xl" />
 
@@ -243,9 +241,9 @@ export default function Home() {
         </div>
       </div>
     );
-  } else if (!roomData) {
+  } else if (!lobbyData) {
     return (
-      <div className="h-screen flex items-center p-4">
+      <div className="min-h-screen flex items-center p-4">
         <div className="w-md mx-auto flex flex-col gap-4">
           <h1 className="text-2xl font-bold">Spotify Roulette</h1>
 
@@ -272,8 +270,8 @@ export default function Home() {
         <Toaster position="top-center" />
       </div>
     );
-  } else if (!roomData.currentTrackData) {
-    const playersList = Object.values(roomData.players);
+  } else if (!lobbyData.currentTrackData) {
+    const playersList = Object.values(lobbyData.players);
 
     if (!selectedLobbyPlayer) {
       setSelectedLobbyPlayer(playersList[0]);
@@ -282,9 +280,19 @@ export default function Home() {
     return (
       <div className="min-h-screen flex items-center p-4">
         <div className="mx-auto flex flex-col w-md gap-4">
-          <h1 className="text-2xl font-bold">
-            Join Code : {roomData.roomCode}
-          </h1>
+          <div>
+            <h1 className="text-2xl font-bold">
+              Join Code : {lobbyData.joinCode}
+            </h1>
+
+            <p className="text-gray-500">
+              Number of rounds : {lobbyData.numRounds}
+            </p>
+
+            <p className="text-gray-500">
+              Round Length : {lobbyData.roundLength / 1000} seconds
+            </p>
+          </div>
 
           <LobbyPlayersCard
             playersList={playersList}
@@ -297,16 +305,26 @@ export default function Home() {
             <></>
           )}
 
-          {roomData.hostId === socket.id ? (
+          <Button
+            className="cursor-pointer"
+            variant="secondary"
+            onClick={leaveLobby}
+          >
+            Leave Lobby
+          </Button>
+
+          {lobbyData.hostId === socket.id ? (
             <Button
-              onClick={() => socket.emit("chooseNextPlayer", roomData.roomCode)}
+              onClick={() =>
+                socket.emit("chooseNextPlayer", lobbyData.joinCode)
+              }
               className="cursor-pointer"
             >
               Start Game
             </Button>
           ) : (
             <h1>
-              Waiting for {roomData.players[roomData.hostId].username} to
+              Waiting for {lobbyData.players[lobbyData.hostId].username} to
               start...
             </h1>
           )}
@@ -315,15 +333,15 @@ export default function Home() {
         <Toaster position="top-center" />
       </div>
     );
-  } else if (showScores && roomData.currentRound >= roomData.numRounds) {
-    const playersList = Object.values(roomData.players);
+  } else if (showScores && lobbyData.currentRound >= lobbyData.numRounds) {
+    const playersList = Object.values(lobbyData.players);
     const winner = playersList.reduce(
       (max, player) => (player.score > max.score ? player : max),
       playersList[0]
     );
 
     return (
-      <div className="h-screen flex items-center p-4">
+      <div className="min-h-screen flex items-center p-4">
         <div className="mx-auto w-md flex flex-col">
           <Card>
             <CardHeader>
@@ -333,10 +351,10 @@ export default function Home() {
             </CardHeader>
 
             <CardContent className="flex flex-col gap-4">
-              {playersList.map(({ username, score }) => (
+              {playersList.map(({ username, score, playerId }) => (
                 <div
                   className="bg-gray-200 p-4 rounded-md flex justify-between"
-                  key={crypto.randomUUID()}
+                  key={playerId}
                 >
                   <p>{username}</p>
                   <p>{score}</p>
@@ -344,10 +362,18 @@ export default function Home() {
               ))}
             </CardContent>
 
-            <CardFooter>
-              {roomData.hostId === socket.id ? (
+            <CardFooter className="flex flex-col gap-4">
+              <Button
+                className="cursor-pointer w-full"
+                variant="secondary"
+                onClick={leaveLobby}
+              >
+                Leave Lobby
+              </Button>
+
+              {lobbyData.hostId === socket.id ? (
                 <Button
-                  onClick={() => socket.emit("playAgain", roomData.roomCode)}
+                  onClick={() => socket.emit("playAgain", lobbyData.joinCode)}
                   className="w-full cursor-pointer"
                 >
                   Play Again
@@ -355,8 +381,8 @@ export default function Home() {
               ) : (
                 <>
                   <h1>
-                    Waiting for {roomData.players[roomData.hostId].username} to
-                    play again...
+                    Waiting for {lobbyData.players[lobbyData.hostId].username}{" "}
+                    to play again...
                   </h1>
                 </>
               )}
@@ -369,25 +395,27 @@ export default function Home() {
     );
   } else if (showScores) {
     return (
-      <div className="h-screen flex items-center p-4">
+      <div className="min-h-screen flex items-center p-4">
         <div className="mx-auto w-md">
           <Card>
             <CardHeader>
               <CardTitle className="text-center text-2xl font-bold">
-                Round {roomData.currentRound + 1}
+                Round {lobbyData.currentRound + 1}
               </CardTitle>
             </CardHeader>
 
             <CardContent className="flex flex-col gap-4">
-              {Object.values(roomData.players).map(({ username, score }) => (
-                <div
-                  className="bg-gray-200 p-4 rounded-md flex justify-between"
-                  key={crypto.randomUUID()}
-                >
-                  <p>{username}</p>
-                  <p>{score}</p>
-                </div>
-              ))}
+              {Object.values(lobbyData.players).map(
+                ({ username, score, playerId }) => (
+                  <div
+                    className="bg-gray-200 p-4 rounded-md flex justify-between"
+                    key={playerId}
+                  >
+                    <p>{username}</p>
+                    <p>{score}</p>
+                  </div>
+                )
+              )}
             </CardContent>
           </Card>
         </div>
@@ -402,14 +430,21 @@ export default function Home() {
       <div className="min-h-screen flex flex-col justify-between">
         <div className="flex flex-col gap-4 p-4">
           <div className="w-full rounded-full overflow-hidden bg-gray-200 h-4">
-            <div className="h-full bg-black progress-bar"></div>
+            <div
+              className="h-full bg-black round-timer"
+              style={
+                {
+                  "--round-timer-duration": `${lobbyData.roundLength / 1000}s`,
+                } as React.CSSProperties
+              }
+            ></div>
           </div>
 
           <div className="mx-auto w-md max-w-full flex flex-col gap-4 items-center">
             <div className="max-w-full flex flex-col items-center">
               <div className="w-[200px] md:w-[300px] lg:w-[400px] aspect-square max-w-full relative border-2">
                 <Image
-                  src={roomData.currentTrackData.track.album.images[0].url}
+                  src={lobbyData.currentTrackData.track.album.images[0].url}
                   alt="Album Cover"
                   fill
                   priority
@@ -418,41 +453,41 @@ export default function Home() {
               </div>
 
               <div>
-                <h1 className="text-2xl font-bold text-center">
-                  {roomData.currentTrackData.track.name}
+                <h1 className="text-2xl font-bold text-center line-clamp-1">
+                  {lobbyData.currentTrackData.track.name}
                 </h1>
 
                 <p className="text-gray-500 text-center">
-                  {roomData.currentTrackData.track.artists[0].name}
+                  {lobbyData.currentTrackData.track.artists[0].name}
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2 w-full">
-              {Object.values(roomData.players).map(({ playerId, username }) => (
-                <PlayerSelectionButton
-                  playerId={playerId}
-                  username={username}
-                  canSelect={!selectedPlayer}
-                  isSelected={selectedPlayer === playerId}
-                  selectPlayer={handleSelectPlayer}
-                  showCorrectAnswer={showCorrectAnswer}
-                  correctPlayerId={
-                    roomData.currentTrackData?.playerId || "Undefined"
-                  }
-                  key={playerId}
-                />
-              ))}
+              {Object.values(lobbyData.players).map(
+                ({ playerId, username }) => (
+                  <PlayerSelectionButton
+                    playerId={playerId}
+                    username={username}
+                    canSelect={!selectedPlayer}
+                    isSelected={selectedPlayer === playerId}
+                    selectPlayer={handleSelectPlayer}
+                    showCorrectAnswer={showCorrectAnswer}
+                    correctPlayerId={
+                      lobbyData.currentTrackData?.playerId || "Undefined"
+                    }
+                    key={playerId}
+                  />
+                )
+              )}
             </div>
           </div>
         </div>
 
-        <div className="sticky bottom-0 left-0 right-0">
-          <SongPlayer
-            accessToken={accessToken}
-            uris={roomData.currentTrackData.track.uri}
-          />
-        </div>
+        <SongPlayer
+          accessToken={accessToken}
+          uris={lobbyData.currentTrackData.track.uri}
+        />
       </div>
 
       <Toaster position="top-center" />

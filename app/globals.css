@@ -122,7 +122,7 @@
   }
 }
 
-@keyframes progressAnimation {
+@keyframes roundTimerAnimation {
   from {
     width: 0%;
   }
@@ -132,7 +132,7 @@
   }
 }
 
-.progress-bar {
+.round-timer {
   width: 0%;
-  animation: progressAnimation 10s linear forwards;
+  animation: roundTimerAnimation var(--round-timer-duration, 10s) linear forwards;
 }
