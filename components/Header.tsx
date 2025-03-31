@@ -1,12 +1,18 @@
+"use client";
+
 import Link from "next/link";
 import React from "react";
 import { Button } from "./ui/button";
 import Image from "next/image";
+import useAuth from "@/lib/useAuth";
+import { FaUserCircle } from "react-icons/fa";
 
 export default function Header() {
+  const accessToken = useAuth(null);
+
   return (
     <div className="relative">
-      <header className="fixed top-0 left-0 right-0 border-b-2 flex items-center p-4 justify-between bg-white">
+      <header className="fixed top-0 left-0 right-0 border-b-2 flex items-center p-4 justify-between bg-white z-50">
         <Link href="/" className="flex gap-4 items-center">
           <Image
             src="/SpotifyLogo.png"
@@ -20,13 +26,27 @@ export default function Header() {
         </Link>
 
         <div className="flex gap-4 items-center">
-          <Button asChild>
-            <Link href="/">Login</Link>
-          </Button>
+          {accessToken ? (
+            <Button asChild>
+              <Link href="/game">Play</Link>
+            </Button>
+          ) : (
+            <Button asChild>
+              <Link href="/login">Login</Link>
+            </Button>
+          )}
 
           <Button variant="secondary" asChild>
             <Link href="/about">About</Link>
           </Button>
+
+          {accessToken ? (
+            <Link href="/me">
+              <FaUserCircle className="text-4xl" />
+            </Link>
+          ) : (
+            <></>
+          )}
         </div>
       </header>
     </div>

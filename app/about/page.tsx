@@ -22,7 +22,7 @@ import { VscVscode } from "react-icons/vsc";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-export default function page() {
+export default function About() {
   return (
     <>
       <Header />
@@ -52,7 +52,7 @@ export default function page() {
             <CardHeader className="flex justify-between">
               <CardTitle>About me 😎</CardTitle>
               <Image
-                src="/SeniorPicture.jpg"
+                src="/MeInSunglasses.jpg"
                 alt="Picture of me"
                 width={32}
                 height={32}
@@ -129,6 +129,14 @@ export default function page() {
                 <li className="flex gap-2">
                   <p>&bull;</p>
                   <p>UI can be weird sometimes</p>
+                </li>
+
+                <li className="flex gap-2">
+                  <p>&bull;</p>
+                  <p>
+                    I will prob add a feature where users can listen to the song
+                    for longer by toggling a switch
+                  </p>
                 </li>
               </ul>
             </CardContent>

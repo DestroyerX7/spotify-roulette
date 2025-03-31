@@ -20,7 +20,7 @@ import { Button } from "./ui/button";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { socket } from "@/socket";
-import { Track } from "@/app/page";
+import { Track } from "./GameScreen";
 
 type Props = {
   topTracks: Track[];

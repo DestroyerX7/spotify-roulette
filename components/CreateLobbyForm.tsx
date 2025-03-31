@@ -20,7 +20,6 @@ import { Button } from "./ui/button";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { socket } from "@/socket";
-import { Track } from "@/app/page";
 import {
   Select,
   SelectContent,
@@ -28,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { Track } from "./GameScreen";
 
 type Props = {
   topTracks: Track[];
@@ -59,7 +59,13 @@ export default function CreateLobbyForm({ topTracks }: Props) {
   const createLobby = (data: z.infer<typeof createFormSchema>) => {
     const numRounds = Number(data.numRounds);
     const roundLength = Number(data.roundLength) * 1000;
-    socket.emit("createLobby", data.username, numRounds, roundLength, topTracks);
+    socket.emit(
+      "createLobby",
+      data.username,
+      numRounds,
+      roundLength,
+      topTracks
+    );
   };
 
   return (

@@ -12,7 +12,7 @@ export async function getLoginData(code: string) {
   const redirectUri =
     process.env.NODE_ENV !== "development"
       ? process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI || ""
-      : "http://localhost:3000/";
+      : "http://localhost:3000/login/";
 
   const response = await axios.post<TokenResponse>(
     "https://accounts.spotify.com/api/token",

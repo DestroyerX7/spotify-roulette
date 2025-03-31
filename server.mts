@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import next from "next";
 import { Server } from "socket.io";
 import dotenv from "dotenv";
-import { Track } from "./app/page";
+import { Track } from "./components/GameScreen";
 
 export type LobbyData = {
   players: { [playerId: string]: Player };

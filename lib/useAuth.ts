@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getLoginData, refreshToken } from "./server-components";
+import { getLoginData, refreshToken } from "./server-actions";
 import { setCookie, getCookie, hasCookie } from "cookies-next";
 
 export default function useAuth(code: string | null) {
@@ -24,19 +24,19 @@ export default function useAuth(code: string | null) {
           setCookie("accessToken", response.accessToken, {
             maxAge: 60 * 60 * 24,
             secure: true,
-            sameSite: "strict",
+            sameSite: "lax",
           });
 
           setCookie("refreshToken", response.refreshToken, {
             maxAge: 60 * 60 * 24,
             secure: true,
-            sameSite: "strict",
+            sameSite: "lax",
           });
 
           setCookie("expireTime", expireTime, {
             maxAge: 60 * 60 * 24,
             secure: true,
-            sameSite: "strict",
+            sameSite: "lax",
           });
 
           setAccessToken(response.accessToken);
@@ -56,19 +56,19 @@ export default function useAuth(code: string | null) {
         setCookie("accessToken", loginData.accessToken, {
           maxAge: 60 * 60 * 24,
           secure: true,
-          sameSite: "strict",
+          sameSite: "lax",
         });
 
         setCookie("refreshToken", loginData.refreshToken, {
           maxAge: 60 * 60 * 24,
           secure: true,
-          sameSite: "strict",
+          sameSite: "lax",
         });
 
         setCookie("expireTime", expireTime, {
           maxAge: 60 * 60 * 24,
           secure: true,
-          sameSite: "strict",
+          sameSite: "lax",
         });
 
         setAccessToken(loginData.accessToken);
