@@ -66,7 +66,11 @@ export default async function Me() {
       <div className="mt-20 max-w-2xl mx-auto p-4">
         <div className="flex flex-col items-center mb-8 gap-2">
           <Image
-            src={userProfile.images[0]?.url || "/SpotifyLogo.png"}
+            src={
+              userProfile.images.length > 0
+                ? userProfile.images[0].url
+                : "/SpotifyLogo.png"
+            }
             alt="User Profile Image"
             width={200}
             height={200}
@@ -106,7 +110,11 @@ export default async function Me() {
                 <div className="flex justify-between" key={track.id}>
                   <div className="flex gap-2">
                     <Image
-                      src={track.album.images[0]?.url || "/SpotifyLogo.png"}
+                      src={
+                        track.album.images.length > 0
+                          ? track.album.images[0].url
+                          : "/SpotifyLogo.png"
+                      }
                       alt="Album Cover"
                       width={64}
                       height={64}
@@ -141,7 +149,11 @@ export default async function Me() {
                 <div className="flex justify-between" key={artist.id}>
                   <div className="flex gap-2">
                     <Image
-                      src={artist.images[0]?.url || "/SpotifyLogo.png"}
+                      src={
+                        artist.images.length > 0
+                          ? artist.images[0].url
+                          : "/SpotifyLogo.png"
+                      }
                       alt="Artist Picture"
                       width={64}
                       height={64}
@@ -171,7 +183,11 @@ export default async function Me() {
               {playlists.map((playlist) => (
                 <div className="flex gap-2" key={playlist.id}>
                   <Image
-                    src={playlist.images[0]?.url || "/SpotifyLogo.png"}
+                    src={
+                      playlist.images && playlist.images.length > 0
+                        ? playlist.images[0].url
+                        : "/SpotifyLogo.png"
+                    }
                     alt="Album Cover"
                     width={64}
                     height={64}
