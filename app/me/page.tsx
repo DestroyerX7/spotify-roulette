@@ -19,7 +19,7 @@ type Playlist = {
 };
 
 export default async function Me() {
-  const accessToken = await auth(null);
+  const accessToken = await auth();
 
   if (!accessToken) {
     redirect("/");

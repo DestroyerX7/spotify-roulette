@@ -1,7 +1,6 @@
 "use server";
 
 import axios from "axios";
-import { setCookie } from "cookies-next";
 import { cookies } from "next/headers";
 
 type TokenResponse = {
@@ -35,10 +34,12 @@ export async function getLoginData(code: string) {
     }
   );
 
+  const expireTime = Date.now() + response.data.expires_in * 1000;
+
   return {
     accessToken: response.data.access_token,
     refreshToken: response.data.refresh_token,
-    expiresIn: response.data.expires_in,
+    expireTime: expireTime,
   };
 }
 
@@ -62,12 +63,15 @@ export async function refreshToken(refreshToken: string) {
   );
 
   const expireTime = Date.now() + response.data.expires_in * 1000;
-  setCookies(response.data.access_token, refreshToken, expireTime);
 
-  return response.data.access_token;
+  return {
+    accessToken: response.data.access_token,
+    refreshToken: refreshToken,
+    expireTime: expireTime,
+  };
 }
 
-export async function auth(code: string | null) {
+export async function auth(code: string | null = null) {
   const cookiesList = await cookies();
   const accessTokenCookie = cookiesList.get("accessToken");
   const refreshTokenCookie = cookiesList.get("refreshToken");
@@ -81,40 +85,54 @@ export async function auth(code: string | null) {
     }
 
     const response = await refreshToken(refreshTokenCookie.value);
-    return response;
+    await setCookies(
+      response.accessToken,
+      response.refreshToken,
+      response.expireTime
+    );
+
+    return response.accessToken;
   } else {
     if (!code) {
       return null;
     }
 
     const response = await getLoginData(code);
-    const expireTime = Date.now() + response.expiresIn * 1000;
+    await setCookies(
+      response.accessToken,
+      response.refreshToken,
+      response.expireTime
+    );
 
-    setCookies(response.accessToken, response.refreshToken, expireTime);
     return response.accessToken;
   }
 }
 
-function setCookies(
+async function setCookies(
   accessToken: string,
   refreshToken: string,
   expireTime: number
 ) {
-  setCookie("accessToken", accessToken, {
+  const cookieList = await cookies();
+
+  cookieList.set("accessToken", accessToken, {
     maxAge: 60 * 60 * 24,
     secure: true,
     sameSite: "lax",
+    path: "/",
   });
 
-  setCookie("refreshToken", refreshToken, {
+  cookieList.set("refreshToken", refreshToken, {
     maxAge: 60 * 60 * 24,
     secure: true,
     sameSite: "lax",
+    path: "/",
   });
 
-  setCookie("expireTime", expireTime, {
+  cookieList.set("expireTime", expireTime.toString(), {
     maxAge: 60 * 60 * 24,
     secure: true,
     sameSite: "lax",
+    path: "/",
   });
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { auth } from "./server-actions";
 
-export default function useAuth(code: string | null) {
+export default function useAuth(code: string | null = null) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
   // Auto refresh the token later

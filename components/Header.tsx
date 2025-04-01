@@ -8,7 +8,7 @@ import useAuth from "@/lib/useAuth";
 import { FaUserCircle } from "react-icons/fa";
 
 export default function Header() {
-  const accessToken = useAuth(null);
+  const accessToken = useAuth();
 
   return (
     <div className="relative">
