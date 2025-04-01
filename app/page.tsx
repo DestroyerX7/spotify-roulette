@@ -23,7 +23,7 @@ export default function Home() {
 
             <p className="mb-8">
               Play with friends and guess who&apos;s randomly selected Spotify
-              songs is playing. Get to know what type of music others like.
+              song is playing. Get to know what type of music others like.
             </p>
 
             <Button asChild>

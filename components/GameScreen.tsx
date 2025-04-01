@@ -15,12 +15,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { TabsList, Tabs, TabsContent, TabsTrigger } from "@/components/ui/tabs";
-import useAuth from "@/lib/useAuth";
 import { Player, LobbyData } from "@/server";
 import { socket } from "@/socket";
 import axios from "axios";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast, Toaster } from "sonner";
 import { LuLoaderCircle } from "react-icons/lu";
@@ -65,9 +63,12 @@ export type Artist = {
   popularity: number;
 };
 
-export default function GameScreen() {
-  const searchParams = useSearchParams();
-  const code = searchParams.get("code");
+type Props = {
+  accessToken: string;
+};
+
+export default function GameScreen({ accessToken }: Props) {
+  const [isConnected, setIsConnected] = useState(false);
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const tracksRef = useRef<Track[]>([]);
@@ -84,11 +85,26 @@ export default function GameScreen() {
 
   const [showScores, setShowScores] = useState(false);
 
-  const accessToken = useAuth(code);
+  useEffect(() => {
+    const handleConnect = () => setIsConnected(true);
+    const handleDisconnect = () => setIsConnected(false);
+
+    if (socket.connected) {
+      setIsConnected(true);
+    } else {
+      socket.on("connect", handleConnect);
+    }
+
+    socket.on("disconnect", handleDisconnect);
+
+    return () => {
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+    };
+  }, []);
 
   useEffect(() => {
-    // Do i need || !socket.connected?
-    if (!accessToken || !socket.connected) {
+    if (!isConnected) {
       return;
     }
 
@@ -97,7 +113,7 @@ export default function GameScreen() {
     const getUserTracks = async () => {
       const limit = 50;
 
-      const first = await axios.get<TracksResponse>(
+      const initialResponse = await axios.get<TracksResponse>(
         `https://api.spotify.com/v1/me/tracks?limit=${limit}`,
         {
           headers: {
@@ -106,14 +122,14 @@ export default function GameScreen() {
         }
       );
 
-      if (first.data.total <= limit) {
-        const tracks = first.data.items.map(({ track }) => track);
+      if (initialResponse.data.total <= limit) {
+        const tracks = initialResponse.data.items.map(({ track }) => track);
         tracksRef.current = tracks;
         setTracks(tracks);
         return;
       }
 
-      const uppedBound = first.data.total - limit;
+      const uppedBound = initialResponse.data.total - limit;
       const randOffset = Math.floor(Math.random() * uppedBound);
 
       const response = await axios.get<TracksResponse>(
@@ -196,7 +212,7 @@ export default function GameScreen() {
       socket.off("startNextRound", handleStartNextRound);
       socket.off("error", handleSocketError);
     };
-  }, [accessToken]);
+  }, [accessToken, isConnected]);
 
   const handleSelectPlayer = (playerId: string) => {
     if (!lobbyDataRef.current) {
@@ -230,11 +246,7 @@ export default function GameScreen() {
   //   console.log(checked);
   // };
 
-  if (!accessToken) {
-    return;
-  }
-
-  if (!socket.connected) {
+  if (!isConnected) {
     return (
       <div className="min-h-screen p-4 flex items-center">
         <div className="mx-auto bg-gray-200 rounded-md p-4 flex items-center gap-2">

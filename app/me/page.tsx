@@ -1,8 +1,8 @@
 import { Artist, Track } from "@/components/GameScreen";
 import Header from "@/components/Header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { auth } from "@/lib/server-actions";
 import axios from "axios";
-import { cookies } from "next/headers";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 
@@ -19,8 +19,7 @@ type Playlist = {
 };
 
 export default async function Me() {
-  const cookiesList = await cookies();
-  const accessToken = cookiesList.get("accessToken")?.value;
+  const accessToken = await auth(null);
 
   if (!accessToken) {
     redirect("/");

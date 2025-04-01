@@ -66,10 +66,17 @@ export default function About() {
                 Hi, my name is Blake Ojera. I am currently a freshman in college
                 going to CU Boulder studying computer science. I created this
                 website for fun after one of my friends named Ashley gave me the
-                idea to create a game like Photo Roulette, but with Spotify
-                songs. My friends sometimes call me McBlack as a joke because I{" "}
-                <span className="font-bold">LOVE</span> McDonalds and
-                well...I&apos;m black.
+                idea to create a game like{" "}
+                <Link
+                  href="https://photoroulette.app/"
+                  target="_blank"
+                  className="hover:underline"
+                >
+                  Photo Roulette
+                </Link>
+                , but with Spotify songs. My friends sometimes call me McBlack
+                as a joke because I <span className="font-bold">LOVE</span>{" "}
+                McDonalds and well...I&apos;m black.
               </p>
             </CardContent>
 
@@ -121,8 +128,8 @@ export default function About() {
                 <li className="flex gap-2">
                   <p>&bull;</p>
                   <p>
-                    Website can take a long time to load initialy because it is
-                    deployed on render.com using the free tier
+                    Website can take a long time to load initially because it is
+                    deployed on Render.com using the free tier
                   </p>
                 </li>
 
@@ -138,6 +145,20 @@ export default function About() {
                     for longer by toggling a switch
                   </p>
                 </li>
+
+                <li className="flex gap-2">
+                  <p>&bull;</p>
+                  <p>
+                    Spotify access token doesn&apos;t automatically refresh when
+                    it expires. Users need to refresh the page for expired
+                    tokens to get refreshed
+                  </p>
+                </li>
+
+                <li className="flex gap-2">
+                  <p>&bull;</p>
+                  <p>More probably...sorry 😬</p>
+                </li>
               </ul>
             </CardContent>
           </Card>
@@ -147,53 +168,87 @@ export default function About() {
               <CardTitle>Tools used 🪛</CardTitle>
             </CardHeader>
 
-            <CardContent>
-              <ul className="flex flex-col gap-4">
-                <li className="flex gap-2 items-center">
-                  <RiNextjsFill className="text-2xl" />
-                  <h1>React with Next.js</h1>
-                </li>
+            <CardContent className="flex flex-col gap-4">
+              <Link
+                href="https://nextjs.org/"
+                target="_blank"
+                className="flex gap-2 items-center hover:underline"
+              >
+                <RiNextjsFill className="text-2xl" />
+                <h1>React with Next.js</h1>
+              </Link>
 
-                <li className="flex gap-2 items-center">
-                  <SiSocketdotio className="text-2xl" />
-                  <h1>Socket.io</h1>
-                </li>
+              <Link
+                href="https://socket.io/"
+                target="_blank"
+                className="flex gap-2 items-center hover:underline"
+              >
+                <SiSocketdotio className="text-2xl" />
+                <h1>Socket.io</h1>
+              </Link>
 
-                <li className="flex gap-2 items-center">
-                  <FaSpotify className="text-2xl text-green-400" />
-                  <h1>Spotify API</h1>
-                </li>
+              <Link
+                href="https://developer.spotify.com/documentation/web-api"
+                target="_blank"
+                className="flex gap-2 items-center hover:underline"
+              >
+                <FaSpotify className="text-2xl text-green-400" />
+                <h1>Spotify API</h1>
+              </Link>
 
-                <li className="flex gap-2 items-center">
-                  <SiShadcnui className="text-2xl" />
-                  <h1>Shadcn</h1>
-                </li>
+              <Link
+                href="https://ui.shadcn.com/"
+                target="_blank"
+                className="flex gap-2 items-center hover:underline"
+              >
+                <SiShadcnui className="text-2xl" />
+                <h1>Shadcn</h1>
+              </Link>
 
-                <li className="flex gap-2 items-center">
-                  <SiTypescript className="text-2xl text-blue-500" />
-                  <h1>Typescript</h1>
-                </li>
+              <Link
+                href="https://www.typescriptlang.org/"
+                target="_blank"
+                className="flex gap-2 items-center hover:underline"
+              >
+                <SiTypescript className="text-2xl text-blue-500" />
+                <h1>Typescript</h1>
+              </Link>
 
-                <li className="flex gap-2 items-center">
-                  <SiRender className="text-2xl" />
-                  <h1>Render.com</h1>
-                </li>
+              <Link
+                href="https://render.com/"
+                target="_blank"
+                className="flex gap-2 items-center hover:underline"
+              >
+                <SiRender className="text-2xl" />
+                <h1>Render.com</h1>
+              </Link>
 
-                <li className="flex gap-2 items-center">
-                  <SiReact className="text-2xl text-rose-500" />
-                  <h1>React Icons</h1>
-                </li>
+              <Link
+                href="https://react-icons.github.io/react-icons/"
+                target="_blank"
+                className="flex gap-2 items-center hover:underline"
+              >
+                <SiReact className="text-2xl text-rose-500 animate-spin-slow" />
+                <h1>React Icons</h1>
+              </Link>
 
-                <li className="flex gap-2 items-center">
-                  <VscVscode className="text-2xl text-blue-400" />
-                  <h1>VS Code</h1>
-                </li>
+              <Link
+                href="https://code.visualstudio.com/"
+                target="_blank"
+                className="flex gap-2 items-center hover:underline"
+              >
+                <VscVscode className="text-2xl text-blue-400" />
+                <h1>VS Code</h1>
+              </Link>
 
-                <li className="flex gap-2 items-center">
-                  <SiTailwindcss className="text-2xl text-sky-400" />
-                  <h1>Tailwind CSS</h1>
-                </li>
-              </ul>
+              <Link
+                href="https://tailwindcss.com/"
+                target="_blank"
+                className="flex gap-2 items-center hover:underline"
+              >
+                <SiTailwindcss className="text-2xl text-sky-400" />
+                <h1>Tailwind CSS</h1>
+              </Link>
             </CardContent>
           </Card>
         </div>

@@ -1,6 +1,8 @@
 "use server";
 
 import axios from "axios";
+import { setCookie } from "cookies-next";
+import { cookies } from "next/headers";
 
 type TokenResponse = {
   access_token: string;
@@ -59,9 +61,60 @@ export async function refreshToken(refreshToken: string) {
     }
   );
 
-  return {
-    accessToken: response.data.access_token,
-    refreshToken: refreshToken,
-    expiresIn: response.data.expires_in,
-  };
+  const expireTime = Date.now() + response.data.expires_in * 1000;
+  setCookies(response.data.access_token, refreshToken, expireTime);
+
+  return response.data.access_token;
+}
+
+export async function auth(code: string | null) {
+  const cookiesList = await cookies();
+  const accessTokenCookie = cookiesList.get("accessToken");
+  const refreshTokenCookie = cookiesList.get("refreshToken");
+  const expireTimeCookie = cookiesList.get("expireTime");
+
+  if (accessTokenCookie && refreshTokenCookie && expireTimeCookie) {
+    const expireTimeNum = Number(expireTimeCookie.value);
+
+    if (Date.now() < expireTimeNum) {
+      return accessTokenCookie.value;
+    }
+
+    const response = await refreshToken(refreshTokenCookie.value);
+    return response;
+  } else {
+    if (!code) {
+      return null;
+    }
+
+    const response = await getLoginData(code);
+    const expireTime = Date.now() + response.expiresIn * 1000;
+
+    setCookies(response.accessToken, response.refreshToken, expireTime);
+    return response.accessToken;
+  }
+}
+
+function setCookies(
+  accessToken: string,
+  refreshToken: string,
+  expireTime: number
+) {
+  setCookie("accessToken", accessToken, {
+    maxAge: 60 * 60 * 24,
+    secure: true,
+    sameSite: "lax",
+  });
+
+  setCookie("refreshToken", refreshToken, {
+    maxAge: 60 * 60 * 24,
+    secure: true,
+    sameSite: "lax",
+  });
+
+  setCookie("expireTime", expireTime, {
+    maxAge: 60 * 60 * 24,
+    secure: true,
+    sameSite: "lax",
+  });
 }

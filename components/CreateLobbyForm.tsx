@@ -109,16 +109,24 @@ export default function CreateLobbyForm({ topTracks }: Props) {
                     defaultValue={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="cursor-pointer">
                         <SelectValue placeholder="Select a number" />
                       </SelectTrigger>
                     </FormControl>
 
                     <SelectContent>
-                      <SelectItem value="5">5</SelectItem>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="15">15</SelectItem>
-                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem className="cursor-pointer" value="5">
+                        5
+                      </SelectItem>
+                      <SelectItem className="cursor-pointer" value="10">
+                        10
+                      </SelectItem>
+                      <SelectItem className="cursor-pointer" value="15">
+                        15
+                      </SelectItem>
+                      <SelectItem className="cursor-pointer" value="20">
+                        20
+                      </SelectItem>
                     </SelectContent>
                   </Select>
 
@@ -139,16 +147,24 @@ export default function CreateLobbyForm({ topTracks }: Props) {
                     defaultValue={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="cursor-pointer">
                         <SelectValue placeholder="Select a number" />
                       </SelectTrigger>
                     </FormControl>
 
                     <SelectContent>
-                      <SelectItem value="5">5</SelectItem>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="15">15</SelectItem>
-                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem className="cursor-pointer" value="5">
+                        5
+                      </SelectItem>
+                      <SelectItem className="cursor-pointer" value="10">
+                        10
+                      </SelectItem>
+                      <SelectItem className="cursor-pointer" value="15">
+                        15
+                      </SelectItem>
+                      <SelectItem className="cursor-pointer" value="20">
+                        20
+                      </SelectItem>
                     </SelectContent>
                   </Select>
 
