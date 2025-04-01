@@ -20,7 +20,7 @@ export default function TopSongsCard({ selectedLobbyPlayer }: Props) {
             key={track.id}
           >
             <Image
-              src={track.album.images[0].url}
+              src={track.album.images[0]?.url || "/SpotifyLogo.png"}
               alt="Album Cover"
               width={32}
               height={32}

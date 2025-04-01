@@ -473,7 +473,10 @@ export default function GameScreen({ accessToken }: Props) {
             <div className="max-w-full flex flex-col items-center">
               <div className="w-[200px] md:w-[300px] lg:w-[400px] aspect-square max-w-full relative border-2">
                 <Image
-                  src={lobbyData.currentTrackData.track.album.images[0].url}
+                  src={
+                    lobbyData.currentTrackData.track.album.images[0]?.url ||
+                    "/SpotifyLogo.png"
+                  }
                   alt="Album Cover"
                   fill
                   priority

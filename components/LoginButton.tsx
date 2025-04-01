@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { toast } from "sonner";
 
 const scopes = [
   "streaming",
@@ -22,11 +21,7 @@ const loginUrl = `https://accounts.spotify.com/authorize?client_id=${process.env
 
 export default function LoginButton() {
   return (
-    <Button
-      onClick={() => toast.loading("Loggin in...", { duration: 10000 })}
-      className="cursor-pointer"
-      asChild
-    >
+    <Button className="cursor-pointer" asChild>
       <Link href={loginUrl}>Login</Link>
     </Button>
   );
