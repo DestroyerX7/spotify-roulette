@@ -1,5 +1,6 @@
 import { Artist, Track } from "@/components/GameScreen";
 import Header from "@/components/Header";
+import LogOutButton from "@/components/LogOutButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { auth } from "@/lib/server-actions";
 import axios from "axios";
@@ -13,7 +14,7 @@ type UserProfile = {
 
 type Playlist = {
   id: string;
-  images: { url: string }[];
+  images: { url: string }[] | null;
   name: string;
   public: boolean;
 };
@@ -84,6 +85,8 @@ export default async function Me() {
               {userProfileResponse.data.display_name}
             </span>
           </h1>
+
+          <LogOutButton />
         </div>
 
         <Tabs defaultValue="topSongs">

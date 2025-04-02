@@ -77,7 +77,11 @@ export async function auth(code: string | null = null) {
   const refreshTokenCookie = cookiesList.get("refreshToken");
   const expireTimeCookie = cookiesList.get("expireTime");
 
-  if (accessTokenCookie && refreshTokenCookie && expireTimeCookie) {
+  if (
+    accessTokenCookie?.value &&
+    refreshTokenCookie?.value &&
+    expireTimeCookie?.value
+  ) {
     const expireTimeNum = Number(expireTimeCookie.value);
 
     if (Date.now() < expireTimeNum) {
@@ -135,4 +139,11 @@ async function setCookies(
     sameSite: "lax",
     path: "/",
   });
+}
+
+export async function logOut() {
+  const cookieList = await cookies();
+  cookieList.delete("accessToken");
+  cookieList.delete("refreshToken");
+  cookieList.delete("expireTime");
 }

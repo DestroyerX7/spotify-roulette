@@ -1,9 +1,11 @@
+import FunMessageButton from "@/components/FunMessageButton";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
 import { FaLaugh } from "react-icons/fa";
 import { FaMusic, FaPlug, FaTrophy } from "react-icons/fa6";
+import { Toaster } from "sonner";
 
 export default function Home() {
   return (
@@ -26,9 +28,11 @@ export default function Home() {
               song is playing. Get to know what type of music others like.
             </p>
 
-            <Button asChild>
+            <Button className="mr-4" asChild>
               <Link href="/game">Play Now</Link>
             </Button>
+
+            <FunMessageButton />
           </div>
 
           <div className="relative w-[256px] h-[256px]">
@@ -65,6 +69,8 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      <Toaster position="top-center" />
     </>
   );
 }

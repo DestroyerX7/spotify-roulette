@@ -27,9 +27,9 @@ export default function Login() {
         <div className="mx-auto">
           <LoginCard />
         </div>
-
-        <Toaster position="top-center" />
       </div>
+
+      <Toaster position="top-center" />
     </>
   );
 }
