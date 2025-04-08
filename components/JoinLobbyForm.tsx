@@ -50,7 +50,8 @@ export default function JoinLobbyForm({ topTracks }: Props) {
   });
 
   const joinLobby = (data: z.infer<typeof joinFormSchema>) => {
-    socket.emit("joinLobby", data.joinCode, data.username, topTracks);
+    const formatted = data.joinCode.trim().toUpperCase();
+    socket.emit("joinLobby", formatted, data.username, topTracks);
   };
 
   return (
@@ -90,7 +91,7 @@ export default function JoinLobbyForm({ topTracks }: Props) {
                   <FormLabel>Join Code</FormLabel>
 
                   <FormControl>
-                    <Input placeholder="123456" {...field} />
+                    <Input placeholder="ABCDEF" {...field} />
                   </FormControl>
 
                   <FormMessage />

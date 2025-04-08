@@ -40,12 +40,10 @@ export default function Header() {
             <Link href="/about">About</Link>
           </Button>
 
-          {accessToken ? (
+          {accessToken && (
             <Link href="/me">
               <FaUserCircle className="text-4xl" />
             </Link>
-          ) : (
-            <></>
           )}
         </div>
       </header>

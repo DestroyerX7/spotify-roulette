@@ -12,7 +12,7 @@ export default function Home() {
     <>
       <Header />
 
-      <div className="top-0 bottom-0 right-0 left-0 bg-[url('/PeopleLaughing.jpg')] bg-no-repeat bg-center bg-cover fixed -z-50">
+      <div className="fixed top-0 left-0 w-full h-full bg-[url('/PeopleLaughing.jpg')] bg-no-repeat bg-center bg-cover -z-50">
         <div className="absolute inset-0 bg-white/50 backdrop-blur-xs"></div>
       </div>
 

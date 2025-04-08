@@ -110,7 +110,7 @@ export default async function Me() {
               </div>
 
               {topTracks.map((track) => (
-                <div className="flex justify-between" key={track.id}>
+                <div className="flex justify-between gap-4" key={track.id}>
                   <div className="flex gap-2">
                     <Image
                       src={
@@ -126,12 +126,12 @@ export default async function Me() {
                     />
 
                     <div>
-                      <h1 className="font-bold">{track.name}</h1>
+                      <h1 className="font-bold line-clamp-1">{track.name}</h1>
                       <p className="text-gray-500">{track.artists[0].name}</p>
                     </div>
                   </div>
 
-                  <h1>{track.popularity}</h1>
+                  {track.popularity != null && <h1>{track.popularity}</h1>}
                 </div>
               ))}
             </div>
@@ -149,7 +149,7 @@ export default async function Me() {
               </div>
 
               {topArtists.map((artist) => (
-                <div className="flex justify-between" key={artist.id}>
+                <div className="flex justify-between gap-4" key={artist.id}>
                   <div className="flex gap-2">
                     <Image
                       src={

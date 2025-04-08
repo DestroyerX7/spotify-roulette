@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 import next from "next";
-import { Server } from "socket.io";
+import { Server, Socket } from "socket.io";
 import dotenv from "dotenv";
 import { Track } from "./components/GameScreen";
 
@@ -45,7 +45,7 @@ const showScoresTime = 2500;
 const showCorrectAnswerTime = 2500;
 
 function generateJoinCode(length = 6) {
-  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   let result = "";
   for (let i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() * characters.length));
@@ -119,18 +119,25 @@ function startNextRound(
 function leaveLobby(
   joinCode: string,
   onLeaveLobby: () => void,
-  playerId: string,
+  socket: Socket,
   io: Server
 ) {
-  delete lobbies[joinCode].players[playerId];
+  socket.leave(joinCode);
+  delete lobbies[joinCode].players[socket.id];
+  onLeaveLobby();
 
   if (Object.entries(lobbies[joinCode].players).length === 0) {
     delete lobbies[joinCode];
-  } else {
-    io.to(joinCode).emit("updateLobbyData", lobbies[joinCode]);
+    return;
   }
 
-  onLeaveLobby();
+  if (socket.id === lobbies[joinCode].hostId) {
+    lobbies[joinCode].hostId = Object.values(
+      lobbies[joinCode].players
+    )[0].playerId;
+  }
+
+  io.to(joinCode).emit("updateLobbyData", lobbies[joinCode]);
 }
 
 app.prepare().then(() => {
@@ -206,10 +213,11 @@ app.prepare().then(() => {
       const answeredTime = Date.now() - lobbies[joinCode].roundStartTime;
 
       if (selectedPlayerId === lobbies[joinCode].currentTrackData.playerId) {
-        const points = Math.max(
-          0,
-          lobbies[joinCode].roundLength - answeredTime
-        );
+        const points =
+          lobbies[joinCode].roundLength - answeredTime > 0
+            ? Math.floor((lobbies[joinCode].roundLength - answeredTime) / 10)
+            : 0;
+
         lobbies[joinCode].players[socket.id].score += points;
       }
 
@@ -223,7 +231,7 @@ app.prepare().then(() => {
     });
 
     socket.on("leaveLobby", (joinCode, onLeaveLobby) => {
-      leaveLobby(joinCode, onLeaveLobby, socket.id, io);
+      leaveLobby(joinCode, onLeaveLobby, socket, io);
     });
 
     socket.on("disconnect", () => {
@@ -231,7 +239,7 @@ app.prepare().then(() => {
         const playersList = Object.keys(lobbyData.players);
 
         if (playersList.includes(socket.id)) {
-          leaveLobby(lobbyData.joinCode, () => {}, socket.id, io);
+          leaveLobby(lobbyData.joinCode, () => {}, socket, io);
         }
       }
     });

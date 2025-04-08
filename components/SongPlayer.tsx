@@ -18,22 +18,16 @@ export default function SongPlayer({ accessToken, uris }: Props) {
   }, [accessToken]);
 
   return (
-    <div>
-      {accessToken ? (
-        <SpotifyPlayer
-          token={accessToken}
-          play={play}
-          uris={uris}
-          callback={(state) => {
-            if (!state.isPlaying) {
-              setPlay(true);
-            }
-          }}
-          showSaveIcon
-        />
-      ) : (
-        <p>Please log in to Spotify</p>
-      )}
-    </div>
+    <SpotifyPlayer
+      token={accessToken}
+      play={play}
+      uris={uris}
+      callback={(state) => {
+        if (!state.isPlaying) {
+          setPlay(true);
+        }
+      }}
+      showSaveIcon
+    />
   );
 }

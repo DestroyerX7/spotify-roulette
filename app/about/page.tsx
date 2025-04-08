@@ -65,7 +65,7 @@ export default function About() {
               <p>
                 Hi, my name is Blake Ojera. I am currently a freshman in college
                 going to CU Boulder studying computer science. I created this
-                website for fun after one of my friends named Ashley gave me the
+                website for fun after one of my friends named Lilly gave me the
                 idea to create a game like{" "}
                 <Link
                   href="https://photoroulette.app/"

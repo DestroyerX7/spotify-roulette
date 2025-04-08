@@ -41,7 +41,7 @@ export type Track = {
   uri: string;
   artists: Artist[];
   id: string;
-  popularity: number;
+  popularity: number | null;
 };
 
 export type Album = {
@@ -328,10 +328,8 @@ export default function GameScreen({ accessToken }: Props) {
             selectLobbyPlayer={selectLobbyPlayer}
           />
 
-          {selectedLobbyPlayer ? (
+          {selectedLobbyPlayer && (
             <TopSongsCard selectedLobbyPlayer={selectedLobbyPlayer} />
-          ) : (
-            <></>
           )}
 
           <Button
@@ -353,8 +351,11 @@ export default function GameScreen({ accessToken }: Props) {
             </Button>
           ) : (
             <h1>
-              Waiting for {lobbyData.players[lobbyData.hostId].username} to
-              start...
+              Waiting for{" "}
+              {lobbyData.players[lobbyData.hostId]
+                ? lobbyData.players[lobbyData.hostId].username
+                : "host"}{" "}
+              to start...
             </h1>
           )}
         </div>
@@ -363,11 +364,10 @@ export default function GameScreen({ accessToken }: Props) {
       </div>
     );
   } else if (showScores && lobbyData.currentRound >= lobbyData.numRounds) {
-    const playersList = Object.values(lobbyData.players);
-    const winner = playersList.reduce(
-      (max, player) => (player.score > max.score ? player : max),
-      playersList[0]
+    const sorted = Object.values(lobbyData.players).toSorted(
+      (a, b) => b.score - a.score
     );
+    const winner = sorted[0];
 
     return (
       <div className="min-h-screen flex items-center p-4">
@@ -380,7 +380,7 @@ export default function GameScreen({ accessToken }: Props) {
             </CardHeader>
 
             <CardContent className="flex flex-col gap-4">
-              {playersList.map(({ username, score, playerId }) => (
+              {sorted.map(({ username, score, playerId }) => (
                 <div
                   className="bg-gray-200 p-4 rounded-md flex justify-between"
                   key={playerId}
@@ -423,6 +423,10 @@ export default function GameScreen({ accessToken }: Props) {
       </div>
     );
   } else if (showScores) {
+    const sorted = Object.values(lobbyData.players).toSorted(
+      (a, b) => b.score - a.score
+    );
+
     return (
       <div className="min-h-screen flex items-center p-4">
         <div className="mx-auto w-md">
@@ -434,17 +438,15 @@ export default function GameScreen({ accessToken }: Props) {
             </CardHeader>
 
             <CardContent className="flex flex-col gap-4">
-              {Object.values(lobbyData.players).map(
-                ({ username, score, playerId }) => (
-                  <div
-                    className="bg-gray-200 p-4 rounded-md flex justify-between"
-                    key={playerId}
-                  >
-                    <p>{username}</p>
-                    <p>{score}</p>
-                  </div>
-                )
-              )}
+              {sorted.map(({ username, score, playerId }) => (
+                <div
+                  className="bg-gray-200 p-4 rounded-md flex justify-between"
+                  key={playerId}
+                >
+                  <p>{username}</p>
+                  <p>{score.toLocaleString()}</p>
+                </div>
+              ))}
             </CardContent>
           </Card>
         </div>

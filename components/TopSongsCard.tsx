@@ -31,7 +31,7 @@ export default function TopSongsCard({ selectedLobbyPlayer }: Props) {
               priority
             />
 
-            <h1>{track.name}</h1>
+            <h1 className="line-clamp-1">{track.name}</h1>
           </div>
         ))}
       </CardContent>
