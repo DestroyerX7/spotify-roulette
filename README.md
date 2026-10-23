@@ -76,3 +76,7 @@ The app is hosted on **Render** as a Node web service.
 - **Build command:** `npm install && npm run build`
 - **Start command:** `npm start`
 - Set the same environment variables in Render, using your production URL for the Spotify redirect URI.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
